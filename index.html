@@ -13,70 +13,117 @@ body{
   color:white;
 }
 header{
-  padding:22px;
+  padding:20px;
   text-align:center;
   font-size:28px;
   letter-spacing:3px;
-  background:linear-gradient(90deg,#0f0f0f,#1b1b1b);
+  background:#111;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
+.cart-btn{
+  position:absolute;
+  right:20px;
+  top:20px;
+  cursor:pointer;
+}
+
+/* SLIDER */
+.slider{
+  height:240px;
+  overflow:hidden;
+}
+.slide{
+  height:240px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  background-size:cover;
+  background-position:center;
+}
+.slide.active{display:flex;}
+.overlay{
+  background:rgba(0,0,0,.6);
+  padding:20px;
+  border-radius:10px;
+}
+
+/* CATEGORIES */
+.categories{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  padding:15px;
+}
+.categories button{
+  padding:10px 18px;
+  border:none;
+  border-radius:20px;
+  background:#1f1f1f;
+  color:white;
+  cursor:pointer;
+}
+
+/* PRODUCTS */
 .products{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:22px;
-  padding:22px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:20px;
+  padding:20px;
 }
 .card{
   background:#141414;
-  border-radius:18px;
-  padding:16px;
+  border-radius:16px;
+  padding:15px;
   animation:fadeUp .6s ease;
 }
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(20px)}
   to{opacity:1;transform:translateY(0)}
 }
+.card:hover{
+  box-shadow:0 0 25px rgba(200,155,60,.2);
+}
 .card img{
   width:100%;
-  border-radius:14px;
+  border-radius:12px;
 }
-select, input, button{
+button, select{
   width:100%;
-  padding:11px;
-  margin-top:10px;
+  margin-top:8px;
+  padding:10px;
   border:none;
-  border-radius:10px;
-  font-size:14px;
-}
-input, select{
-  background:#1f1f1f;
-  color:white;
+  border-radius:8px;
 }
 button{
   background:linear-gradient(90deg,#c89b3c,#f5d06f);
   font-weight:bold;
   cursor:pointer;
 }
-.delete{
-  background:#ff4d4d;
-  color:white;
-}
-.stock{
-  font-size:13px;
-  margin-top:6px;
-  color:#7CFC98;
-}
-.out{
-  color:#ff6b6b;
-}
-.admin{
-  display:none;
-  padding:20px;
+
+/* CART */
+.cart{
+  position:fixed;
+  right:-100%;
+  top:0;
+  width:320px;
+  height:100%;
   background:#111;
+  padding:20px;
+  transition:.3s;
+  overflow:auto;
+  z-index:20;
+}
+.cart.open{right:0;}
+.cart-item{
+  border-bottom:1px solid #333;
+  padding:10px 0;
 }
 footer{
   text-align:center;
   padding:15px;
-  font-size:12px;
   color:#888;
 }
 </style>
@@ -84,138 +131,121 @@ footer{
 
 <body>
 
-<header>LUXE RESSELS</header>
+<header>
+LUXE RESSELS
+<span class="cart-btn" onclick="toggleCart()">🛒</span>
+</header>
 
-<!-- ADMIN LOGIN -->
-<div class="admin" id="adminPanel">
-  <h3>Admin Panel</h3>
-  <input id="name" placeholder="Product Name">
-  <input id="price" placeholder="Price (Rs)">
-  <input id="image" placeholder="Image URL">
-  <input id="sizes" placeholder="Sizes (comma separated)">
-  <select id="stock">
-    <option value="in">In Stock</option>
-    <option value="out">Out of Stock</option>
-  </select>
-  <button onclick="addProduct()">Add Product</button>
+<!-- SLIDER -->
+<div class="slider">
+  <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1528701800489-20be1c1e02b6')">
+    <div class="overlay">Premium Sneakers</div>
+  </div>
+  <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf')">
+    <div class="overlay">Luxury Shirts</div>
+  </div>
 </div>
 
-<section class="products" id="products"></section>
+<!-- CATEGORIES -->
+<div class="categories">
+  <button onclick="filter('all')">All</button>
+  <button onclick="filter('shoes')">Shoes</button>
+  <button onclick="filter('shirts')">Shirts</button>
+</div>
 
-<footer>Cash on Delivery & UPI Available</footer>
+<!-- PRODUCTS -->
+<div class="products" id="products"></div>
+
+<!-- CART -->
+<div class="cart" id="cart">
+  <h3>Your Cart</h3>
+  <div id="cartItems"></div>
+  <h4 id="total"></h4>
+  <button onclick="checkout()">Checkout</button>
+</div>
+
+<footer>UPI & Cash on Delivery Available</footer>
 
 <script>
-const ADMIN_PASSWORD = "admin123"; // CHANGE THIS
-const UPI_ID = "9701347100@axisbank";
-const WHATSAPP = "917842344417";
+const UPI="9701347100@axisbank";
+const WHATSAPP="917842344417";
 
-let isAdmin = false;
-let products = JSON.parse(localStorage.getItem("products")) || [
-  {
-    id:Date.now(),
-    name:"Premium Sneakers",
-    price:"Rs. 9,999",
-    image:"https://images.unsplash.com/photo-1528701800489-20be1c1e02b6",
-    sizes:["7","8","9","10"],
-    stock:"in"
-  }
+const products=[
+  {id:1,name:"Premium Sneakers",price:4999,cat:"shoes",img:"https://images.unsplash.com/photo-1528701800489-20be1c1e02b6"},
+  {id:2,name:"Luxury Shirt",price:2499,cat:"shirts",img:"https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf"}
 ];
 
-localStorage.setItem("products",JSON.stringify(products));
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
 
-const container = document.getElementById("products");
+const list=document.getElementById("products");
 
-// ADMIN LOGIN (tap header 3 times)
-let taps = 0;
-document.querySelector("header").onclick = ()=>{
-  taps++;
-  if(taps===3){
-    const pass = prompt("Admin Password:");
-    if(pass===ADMIN_PASSWORD){
-      isAdmin = true;
-      document.getElementById("adminPanel").style.display="block";
-      showProducts();
-      alert("Admin Mode Enabled");
-    }
-    taps = 0;
-  }
-};
-
-// SHOW PRODUCTS
-function showProducts(){
-  container.innerHTML="";
-  products.forEach(p=>{
-    const card=document.createElement("div");
-    card.className="card";
-
-    const sizes=p.sizes.map(s=>`<option>${s}</option>`).join("");
-
-    card.innerHTML=`
-      <img src="${p.image}">
-      <h3>${p.name}</h3>
-      <p>${p.price}</p>
-      <div class="stock ${p.stock==='out'?'out':''}">
-        ${p.stock==='in'?'In Stock':'Out of Stock'}
-      </div>
-      <select id="size-${p.id}">
-        <option>Select Size</option>${sizes}
-      </select>
-      <button ${p.stock==='out'?'disabled':''}
-        onclick="checkout('${p.name}','${p.price}','size-${p.id}')">
-        Buy Now
-      </button>
-      ${isAdmin?`<button class="delete" onclick="deleteProduct(${p.id})">Delete</button>`:""}
-    `;
-    container.appendChild(card);
+function render(items){
+  list.innerHTML="";
+  items.forEach(p=>{
+    list.innerHTML+=`
+      <div class="card">
+        <img src="${p.img}">
+        <h3>${p.name}</h3>
+        <p>₹${p.price}</p>
+        <button onclick="addCart(${p.id})">Add to Cart</button>
+      </div>`;
   });
 }
-showProducts();
+render(products);
 
-// ADD PRODUCT
-function addProduct(){
-  const name=nameEl.value;
-  const price=priceEl.value;
-  const image=imageEl.value;
-  const sizes=sizesEl.value.split(",");
-  const stock=stockEl.value;
-
-  if(!name||!price||!image) return alert("Fill all fields");
-
-  products.push({
-    id:Date.now(),
-    name,
-    price:"Rs. "+price,
-    image,
-    sizes,
-    stock
-  });
-  localStorage.setItem("products",JSON.stringify(products));
-  showProducts();
+function filter(cat){
+  cat==="all"?render(products):render(products.filter(p=>p.cat===cat));
 }
 
-// DELETE
-function deleteProduct(id){
-  products=products.filter(p=>p.id!==id);
-  localStorage.setItem("products",JSON.stringify(products));
-  showProducts();
+// CART
+function toggleCart(){
+  document.getElementById("cart").classList.toggle("open");
+  showCart();
+}
+function addCart(id){
+  const item=products.find(p=>p.id===id);
+  cart.push(item);
+  localStorage.setItem("cart",JSON.stringify(cart));
+  alert("Added to cart");
+}
+function showCart(){
+  const box=document.getElementById("cartItems");
+  let total=0;
+  box.innerHTML="";
+  cart.forEach((i,idx)=>{
+    total+=i.price;
+    box.innerHTML+=`
+      <div class="cart-item">
+        ${i.name} - ₹${i.price}
+        <button onclick="remove(${idx})">❌</button>
+      </div>`;
+  });
+  document.getElementById("total").innerText="Total: ₹"+total;
+}
+function remove(i){
+  cart.splice(i,1);
+  localStorage.setItem("cart",JSON.stringify(cart));
+  showCart();
 }
 
 // CHECKOUT
-function checkout(name,price,sizeId){
-  const size=document.getElementById(sizeId).value;
-  if(size==="Select Size") return alert("Select size");
-
-  const method=prompt("1-UPI\n2-COD\n3-WhatsApp");
-  if(method==="1"){
-    alert(`Pay via UPI\n\n${UPI_ID}`);
-  }else if(method==="2"){
-    const addr=prompt("Delivery Address:");
-    if(addr) alert("Order Confirmed ");
-  }else if(method==="3"){
-    const msg=`Order: ${name}\n${price}\nSize: ${size}`;
-    window.open(`https://wa.me/${WHATSAPP}?text=`+encodeURIComponent(msg));
+function checkout(){
+  const m=prompt("1-UPI\n2-COD\n3-WhatsApp");
+  if(m==="1") alert("Pay via UPI:\n"+UPI);
+  if(m==="2") alert("COD order confirmed 🎉");
+  if(m==="3"){
+    window.open(`https://wa.me/${WHATSAPP}?text=Order from Luxe Ressels`);
   }
 }
+
+// SLIDER AUTO
+let s=0;
+setInterval(()=>{
+  const slides=document.querySelectorAll(".slide");
+  slides[s].classList.remove("active");
+  s=(s+1)%slides.length;
+  slides[s].classList.add("active");
+},3000);
 </script>
 
 </body>
