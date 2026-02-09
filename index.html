@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxe Ressels</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Poppins, sans-serif;
+  background:#0b0b0b;
+  color:white;
+}
+header{
+  padding:22px;
+  text-align:center;
+  font-size:28px;
+  letter-spacing:3px;
+  background:linear-gradient(90deg,#0f0f0f,#1b1b1b);
+}
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:22px;
+  padding:22px;
+}
+.card{
+  background:#141414;
+  border-radius:18px;
+  padding:16px;
+  animation:fadeUp .6s ease;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.card img{
+  width:100%;
+  border-radius:14px;
+}
+select, input, button{
+  width:100%;
+  padding:11px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  font-size:14px;
+}
+input, select{
+  background:#1f1f1f;
+  color:white;
+}
+button{
+  background:linear-gradient(90deg,#c89b3c,#f5d06f);
+  font-weight:bold;
+  cursor:pointer;
+}
+.delete{
+  background:#ff4d4d;
+  color:white;
+}
+.stock{
+  font-size:13px;
+  margin-top:6px;
+  color:#7CFC98;
+}
+.out{
+  color:#ff6b6b;
+}
+.admin{
+  display:none;
+  padding:20px;
+  background:#111;
+}
+footer{
+  text-align:center;
+  padding:15px;
+  font-size:12px;
+  color:#888;
+}
+</style>
+</head>
+
+<body>
+
+<header>LUXE RESSELS</header>
+
+<!-- ADMIN LOGIN -->
+<div class="admin" id="adminPanel">
+  <h3>Admin Panel</h3>
+  <input id="name" placeholder="Product Name">
+  <input id="price" placeholder="Price (Rs)">
+  <input id="image" placeholder="Image URL">
+  <input id="sizes" placeholder="Sizes (comma separated)">
+  <select id="stock">
+    <option value="in">In Stock</option>
+    <option value="out">Out of Stock</option>
+  </select>
+  <button onclick="addProduct()">Add Product</button>
+</div>
+
+<section class="products" id="products"></section>
+
+<footer>Cash on Delivery & UPI Available</footer>
+
+<script>
+const ADMIN_PASSWORD = "admin123"; // CHANGE THIS
+const UPI_ID = "9701347100@axisbank";
+const WHATSAPP = "917842344417";
+
+let isAdmin = false;
+let products = JSON.parse(localStorage.getItem("products")) || [
+  {
+    id:Date.now(),
+    name:"Premium Sneakers",
+    price:"Rs. 9,999",
+    image:"https://images.unsplash.com/photo-1528701800489-20be1c1e02b6",
+    sizes:["7","8","9","10"],
+    stock:"in"
+  }
+];
+
+localStorage.setItem("products",JSON.stringify(products));
+
+const container = document.getElementById("products");
+
+// ADMIN LOGIN (tap header 3 times)
+let taps = 0;
+document.querySelector("header").onclick = ()=>{
+  taps++;
+  if(taps===3){
+    const pass = prompt("Admin Password:");
+    if(pass===ADMIN_PASSWORD){
+      isAdmin = true;
+      document.getElementById("adminPanel").style.display="block";
+      showProducts();
+      alert("Admin Mode Enabled");
+    }
+    taps = 0;
+  }
+};
+
+// SHOW PRODUCTS
+function showProducts(){
+  container.innerHTML="";
+  products.forEach(p=>{
+    const card=document.createElement("div");
+    card.className="card";
+
+    const sizes=p.sizes.map(s=>`<option>${s}</option>`).join("");
+
+    card.innerHTML=`
+      <img src="${p.image}">
+      <h3>${p.name}</h3>
+      <p>${p.price}</p>
+      <div class="stock ${p.stock==='out'?'out':''}">
+        ${p.stock==='in'?'In Stock':'Out of Stock'}
+      </div>
+      <select id="size-${p.id}">
+        <option>Select Size</option>${sizes}
+      </select>
+      <button ${p.stock==='out'?'disabled':''}
+        onclick="checkout('${p.name}','${p.price}','size-${p.id}')">
+        Buy Now
+      </button>
+      ${isAdmin?`<button class="delete" onclick="deleteProduct(${p.id})">Delete</button>`:""}
+    `;
+    container.appendChild(card);
+  });
+}
+showProducts();
+
+// ADD PRODUCT
+function addProduct(){
+  const name=nameEl.value;
+  const price=priceEl.value;
+  const image=imageEl.value;
+  const sizes=sizesEl.value.split(",");
+  const stock=stockEl.value;
+
+  if(!name||!price||!image) return alert("Fill all fields");
+
+  products.push({
+    id:Date.now(),
+    name,
+    price:"Rs. "+price,
+    image,
+    sizes,
+    stock
+  });
+  localStorage.setItem("products",JSON.stringify(products));
+  showProducts();
+}
+
+// DELETE
+function deleteProduct(id){
+  products=products.filter(p=>p.id!==id);
+  localStorage.setItem("products",JSON.stringify(products));
+  showProducts();
+}
+
+// CHECKOUT
+function checkout(name,price,sizeId){
+  const size=document.getElementById(sizeId).value;
+  if(size==="Select Size") return alert("Select size");
+
+  const method=prompt("1-UPI\n2-COD\n3-WhatsApp");
+  if(method==="1"){
+    alert(`Pay via UPI\n\n${UPI_ID}`);
+  }else if(method==="2"){
+    const addr=prompt("Delivery Address:");
+    if(addr) alert("Order Confirmed ");
+  }else if(method==="3"){
+    const msg=`Order: ${name}\n${price}\nSize: ${size}`;
+    window.open(`https://wa.me/${WHATSAPP}?text=`+encodeURIComponent(msg));
+  }
+}
+</script>
+
+</body>
+</html>
