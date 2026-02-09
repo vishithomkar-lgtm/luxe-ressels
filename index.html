@@ -3,100 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Luxe Ressels</title>
+<title>Luxe Closets</title>
 
 <style>
+*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Poppins, sans-serif;
+  font-family:Poppins,Arial,sans-serif;
   background:#0b0b0b;
-  color:white;
+  color:#fff;
 }
+
+/* HEADER */
 header{
-  padding:20px;
+  padding:18px;
   text-align:center;
-  font-size:28px;
-  letter-spacing:3px;
-  background:#111;
-  position:sticky;
-  top:0;
-  z-index:10;
-}
-.cart-btn{
-  position:absolute;
-  right:20px;
-  top:20px;
-  cursor:pointer;
+  font-size:26px;
+  letter-spacing:2px;
+  background:linear-gradient(90deg,#111,#1a1a1a);
 }
 
-/* SLIDER */
-.slider{
-  height:240px;
-  overflow:hidden;
-}
-.slide{
-  height:240px;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  font-size:28px;
-  background-size:cover;
-  background-position:center;
-}
-.slide.active{display:flex;}
-.overlay{
-  background:rgba(0,0,0,.6);
-  padding:20px;
-  border-radius:10px;
-}
-
-/* CATEGORIES */
+/* CATEGORY BAR */
 .categories{
   display:flex;
   justify-content:center;
-  gap:12px;
+  gap:15px;
   padding:15px;
 }
 .categories button{
-  padding:10px 18px;
-  border:none;
-  border-radius:20px;
   background:#1f1f1f;
   color:white;
+  border:none;
+  padding:10px 18px;
+  border-radius:20px;
   cursor:pointer;
+  transition:.3s;
+}
+.categories button:hover{
+  background:linear-gradient(90deg,#c89b3c,#f5d06f);
+  color:black;
 }
 
-/* PRODUCTS */
+/* PRODUCTS GRID */
 .products{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
   padding:20px;
 }
+
+/* PRODUCT CARD */
 .card{
   background:#141414;
   border-radius:16px;
   padding:15px;
   animation:fadeUp .6s ease;
-}
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(20px)}
-  to{opacity:1;transform:translateY(0)}
+  transition:.3s;
 }
 .card:hover{
-  box-shadow:0 0 25px rgba(200,155,60,.2);
+  transform:translateY(-6px);
+  box-shadow:0 10px 30px rgba(255,255,255,.08);
 }
 .card img{
   width:100%;
   border-radius:12px;
 }
-button, select{
+.card h3{margin:10px 0 5px}
+.card p{margin:0;color:#ccc}
+
+select,button{
   width:100%;
-  margin-top:8px;
   padding:10px;
+  margin-top:8px;
   border:none;
   border-radius:8px;
 }
+select{background:#1f1f1f;color:white}
 button{
   background:linear-gradient(90deg,#c89b3c,#f5d06f);
   font-weight:bold;
@@ -106,146 +88,142 @@ button{
 /* CART */
 .cart{
   position:fixed;
-  right:-100%;
-  top:0;
-  width:320px;
-  height:100%;
-  background:#111;
-  padding:20px;
-  transition:.3s;
-  overflow:auto;
-  z-index:20;
+  bottom:20px;
+  right:20px;
+  background:#141414;
+  padding:15px;
+  border-radius:14px;
+  width:260px;
+  box-shadow:0 0 20px rgba(0,0,0,.5);
 }
-.cart.open{right:0;}
-.cart-item{
-  border-bottom:1px solid #333;
-  padding:10px 0;
-}
+.cart h4{text-align:center;margin-top:0}
+.cart-item{font-size:14px;margin-bottom:6px}
+
+/* FOOTER */
 footer{
   text-align:center;
   padding:15px;
+  font-size:12px;
   color:#888;
+}
+
+/* ANIMATION */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
 }
 </style>
 </head>
 
 <body>
 
-<header>
-LUXE RESSELS
-<span class="cart-btn" onclick="toggleCart()">🛒</span>
-</header>
+<header>LUXE CLOSETS</header>
 
-<!-- SLIDER -->
-<div class="slider">
-  <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1528701800489-20be1c1e02b6')">
-    <div class="overlay">Premium Sneakers</div>
-  </div>
-  <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf')">
-    <div class="overlay">Luxury Shirts</div>
-  </div>
-</div>
-
-<!-- CATEGORIES -->
 <div class="categories">
-  <button onclick="filter('all')">All</button>
-  <button onclick="filter('shoes')">Shoes</button>
-  <button onclick="filter('shirts')">Shirts</button>
+  <button onclick="filterProducts('all')">All</button>
+  <button onclick="filterProducts('sneakers')">Sneakers</button>
+  <button onclick="filterProducts('shirts')">Shirts</button>
 </div>
 
-<!-- PRODUCTS -->
-<div class="products" id="products"></div>
+<section class="products" id="productList"></section>
 
-<!-- CART -->
 <div class="cart" id="cart">
-  <h3>Your Cart</h3>
+  <h4> Cart</h4>
   <div id="cartItems"></div>
-  <h4 id="total"></h4>
-  <button onclick="checkout()">Checkout</button>
+  <button onclick="checkout()">Checkout on WhatsApp</button>
 </div>
 
-<footer>UPI & Cash on Delivery Available</footer>
+<footer>Cash on Delivery & UPI Available</footer>
 
 <script>
-const UPI="9701347100@axisbank";
-const WHATSAPP="917842344417";
-
-const products=[
-  {id:1,name:"Premium Sneakers",price:4999,cat:"shoes",img:"https://images.unsplash.com/photo-1528701800489-20be1c1e02b6"},
-  {id:2,name:"Luxury Shirt",price:2499,cat:"shirts",img:"https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf"}
+// ===== PRODUCTS (ADD AS MANY AS YOU WANT HERE) =====
+const products = [
+  {
+    name:"Chunky Street Sneaker",
+    price:3499,
+    category:"sneakers",
+    image:"https://images.unsplash.com/photo-1528701800489-20be1c1e02b6",
+    sizes:[6,7,8,9,10]
+  },
+  {
+    name:"Classic White Sneaker",
+    price:2999,
+    category:"sneakers",
+    image:"https://images.unsplash.com/photo-1549298916-b41d501d3772",
+    sizes:[7,8,9,10]
+  },
+  {
+    name:"Oversized Black Shirt",
+    price:1799,
+    category:"shirts",
+    image:"https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf",
+    sizes:["S","M","L","XL"]
+  },
+  {
+    name:"Minimal White Shirt",
+    price:1999,
+    category:"shirts",
+    image:"https://images.unsplash.com/photo-1521335629791-ce4aec67dd53",
+    sizes:["S","M","L","XL"]
+  }
 ];
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[];
+let cart = [];
 
-const list=document.getElementById("products");
-
-function render(items){
-  list.innerHTML="";
-  items.forEach(p=>{
-    list.innerHTML+=`
+// ===== RENDER PRODUCTS =====
+function renderProducts(list){
+  const container=document.getElementById("productList");
+  container.innerHTML="";
+  list.forEach((p,i)=>{
+    let sizeOptions=p.sizes.map(s=>`<option>${s}</option>`).join("");
+    container.innerHTML+=`
       <div class="card">
-        <img src="${p.img}">
+        <img src="${p.image}">
         <h3>${p.name}</h3>
-        <p>₹${p.price}</p>
-        <button onclick="addCart(${p.id})">Add to Cart</button>
-      </div>`;
+        <p>${p.price}</p>
+        <select id="size${i}">
+          <option>Select Size</option>
+          ${sizeOptions}
+        </select>
+        <button onclick="addToCart(${i})">Add to Cart</button>
+      </div>
+    `;
   });
 }
-render(products);
+renderProducts(products);
 
-function filter(cat){
-  cat==="all"?render(products):render(products.filter(p=>p.cat===cat));
+// ===== FILTER =====
+function filterProducts(cat){
+  if(cat==="all") renderProducts(products);
+  else renderProducts(products.filter(p=>p.category===cat));
 }
 
-// CART
-function toggleCart(){
-  document.getElementById("cart").classList.toggle("open");
-  showCart();
+// ===== CART =====
+function addToCart(index){
+  let size=document.getElementById("size"+index).value;
+  if(size==="Select Size"){alert("Select size");return;}
+  cart.push({...products[index],size});
+  updateCart();
 }
-function addCart(id){
-  const item=products.find(p=>p.id===id);
-  cart.push(item);
-  localStorage.setItem("cart",JSON.stringify(cart));
-  alert("Added to cart");
-}
-function showCart(){
+
+function updateCart(){
   const box=document.getElementById("cartItems");
-  let total=0;
   box.innerHTML="";
-  cart.forEach((i,idx)=>{
-    total+=i.price;
-    box.innerHTML+=`
-      <div class="cart-item">
-        ${i.name} - ₹${i.price}
-        <button onclick="remove(${idx})">❌</button>
-      </div>`;
+  cart.forEach(c=>{
+    box.innerHTML+=`<div class="cart-item">${c.name} (${c.size})</div>`;
   });
-  document.getElementById("total").innerText="Total: ₹"+total;
-}
-function remove(i){
-  cart.splice(i,1);
-  localStorage.setItem("cart",JSON.stringify(cart));
-  showCart();
 }
 
-// CHECKOUT
+// ===== CHECKOUT =====
 function checkout(){
-  const m=prompt("1-UPI\n2-COD\n3-WhatsApp");
-  if(m==="1") alert("Pay via UPI:\n"+UPI);
-  if(m==="2") alert("COD order confirmed 🎉");
-  if(m==="3"){
-    window.open(`https://wa.me/${WHATSAPP}?text=Order from Luxe Ressels`);
-  }
+  if(cart.length===0){alert("Cart is empty");return;}
+  let msg="Order Details:%0A";
+  cart.forEach(c=>{
+    msg+=`${c.name} - ${c.price} Size:${c.size}%0A`;
+  });
+  msg+="Payment: COD / UPI";
+  window.open("https://wa.me/919701347100?text="+msg);
 }
-
-// SLIDER AUTO
-let s=0;
-setInterval(()=>{
-  const slides=document.querySelectorAll(".slide");
-  slides[s].classList.remove("active");
-  s=(s+1)%slides.length;
-  slides[s].classList.add("active");
-},3000);
 </script>
 
 </body>
